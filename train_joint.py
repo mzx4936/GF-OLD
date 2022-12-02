@@ -41,10 +41,12 @@ if __name__ == '__main__':
 
     # Set device
     os.environ["CUDA_VISIBLE_DEVICES"] = args['cuda']
-    device = torch.device('cuda:' + cu if torch.cuda.is_available() else 'cpu')
+    print("torch.cuda.is_available()", torch.cuda.is_available())
+    # device = torch.device('cuda:' + cu if torch.cuda.is_available() else 'cpu')
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     # device = torch.device('cpu')
     print("device is", device)
-    print("torch.cuda.is_available()", torch.cuda.is_available())
+    
 
     num_labels = 2
 
