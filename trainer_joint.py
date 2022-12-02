@@ -122,7 +122,7 @@ class Trainer():
         labels_all = None
         loss = 0
         iters_per_epoch = 0
-        start = time.clock()
+        start = time.time()
         for inputs, lens, mask, labels, url in tqdm(dataloader, desc='Training'):
             iters_per_epoch += 1
             if labels_all is None:
@@ -156,7 +156,7 @@ class Trainer():
                 self.optimizer.step()
                 if self.scheduler is not None:
                     self.scheduler.step()
-        end = time.clock()
+        end = time.time()
         self.time.append(end-start)
         print(f'process time: {sum(self.time)/(self.epoch+1)}')
 
