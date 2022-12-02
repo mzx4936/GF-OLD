@@ -40,7 +40,7 @@ if __name__ == '__main__':
     np.random.seed(seed)
 
     # Set device
-    os.environ["CUDA_VISIBLE_DEVICES"] = args['cuda']
+    # os.environ["CUDA_VISIBLE_DEVICES"] = args['cuda']
     print("torch.cuda.is_available()", torch.cuda.is_available())
     # device = torch.device('cuda:' + cu if torch.cuda.is_available() else 'cpu')
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
