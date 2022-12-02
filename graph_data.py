@@ -39,7 +39,7 @@ def build_graph(nodes, relations, features):
 
 def load_graph(tweet_path, user_path, relationship_path, test_size=0.3, feat_model='soft', feat_init='non_off'):
     data = pd.read_csv(tweet_path)
-    purl = data['user'].values
+    purl = data['user_id'].values
     labels = np.array(data['is_off'].values)
     purl, turl, labels, _ = train_test_split(purl, labels, test_size=test_size, random_state=0)
     nodes = pd.read_csv(user_path)
