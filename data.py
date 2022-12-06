@@ -113,7 +113,7 @@ def del_tensor_ele(arr, index):
 
 def mydata(path, tokenizer, data_type='train', truncate=512, test_size=0.3):
     data = pd.read_csv(path)
-    purl = data['user'].values
+    purl = data['user_id'].values
     tweets = np.array(data['content'].values)
     labels = np.array(data['is_off'].values)
     nums = len(data)
