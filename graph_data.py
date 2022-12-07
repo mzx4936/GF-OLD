@@ -1,3 +1,5 @@
+import sys
+
 import dgl
 import numpy as np
 import pandas as pd
@@ -23,16 +25,16 @@ def normalize(mx):
 
 
 def build_graph(nodes, relations, features):
-    g = dgl.DGLGraph()
     source = [i - 1 for i in relations['user'].tolist()]
     target = [i - 1 for i in relations['follow_user'].tolist()]
-    # add nodes
     nodes_len = len(nodes)
-    g.add_nodes(nodes_len)
-    # add relations
-    g.add_edges(source, target)
-    g = dgl.add_self_loop(g)
-    # add features
+    # We will assume that the number of nodes is small enough for int32, but just in case, we will assert here.
+    assert(nodes_len < 2**31-1)
+    g = dgl.graph((source, target), idtype=torch.int32)
+    # Add self-loop for each node to preserve old node representation
+    #   Note - Using g = g.add_self_loop(g) here raises the following:
+    #       DGLError('Invalid key "{}". Must be one of the edge types.'.format(orig_key))
+    g.add_edges(g.nodes(), g.nodes())
     g.ndata['features'] = features
     return g, source, target
 
@@ -100,7 +102,7 @@ def load_graph(tweet_path, user_path, relationship_path, test_size=0.3, feat_mod
         ngrams = sp.csr_matrix(ngrams)
         ngrams = normalize(ngrams)
         features = torch.tensor(np.array(ngrams.todense())).float()
-
+    assert(features.size()[0] == len(nodes))
     g, source, target = build_graph(nodes, relations, features)
     print(g)
     return g, source, target, nodes
