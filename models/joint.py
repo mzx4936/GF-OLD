@@ -1,4 +1,4 @@
-from models.modules.gnn_layer import GATConv
+from models.modules.gnn_layer import GATConv, GATv2Conv
 import torch
 from torch import nn
 from transformers import BertModel
