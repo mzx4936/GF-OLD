@@ -1,5 +1,3 @@
-import sys
-
 import dgl
 import numpy as np
 import pandas as pd
@@ -29,7 +27,7 @@ def build_graph(nodes, relations, features):
     target = [i - 1 for i in relations['follow_user'].tolist()]
     nodes_len = len(nodes)
     # We will assume that the number of nodes is small enough for int32, but just in case, we will assert here.
-    assert(nodes_len < 2**31-1)
+    assert (nodes_len < 2 ** 31 - 1)
     g = dgl.graph((source, target), idtype=torch.int32)
     # Add self-loop for each node to preserve old node representation
     #   Note - Using g = g.add_self_loop(g) here raises the following:
@@ -55,6 +53,12 @@ def load_graph(tweet_path, user_path, relationship_path, test_size=0.3, feat_mod
     ul = pd.DataFrame({'user': purl, 'label': labels})
     labels_count = ul.groupby('user')['label'].value_counts().unstack().fillna(value=0)
 
+    labels_count = pd.DataFrame(data={'user': labels_count.index,
+                                      'not_off': labels_count[0],
+                                      'off': labels_count[1]},
+                                index=[i for i in range(1, len(labels_count.index) + 1)])
+    nodes = pd.merge(nodes, labels_count, on='user', how='left')
+
     if feat_model == 'soft':
         not_off = None
         off = None
@@ -68,21 +72,13 @@ def load_graph(tweet_path, user_path, relationship_path, test_size=0.3, feat_mod
         elif feat_init == 'non_off':
             not_off = 1
             off = 1e-6
-        labels_count = pd.DataFrame(data={'user': labels_count.index,
-                                          'not_off': labels_count[0],
-                                          'off': labels_count[1]},
-                                    index=[i for i in range(len(labels_count.index))])
-        nodes = pd.merge(nodes, labels_count, on='user', how='left')
+
         nodes.loc[nodes['not_off'].isnull(), ['not_off']] = not_off
         nodes.loc[nodes['off'].isnull(), ['off']] = off
         labels = nodes[['not_off', 'off']].to_numpy()
         features = torch.tensor(list(map(list, labels))).float()
 
     elif feat_model == 'hard':
-        labels_count = pd.DataFrame({'user': labels_count.index,
-                                     'not_off': labels_count[0],
-                                     'off': labels_count[1]})
-        nodes = pd.merge(nodes, labels_count, on='user', how='left')
         nodes.loc[nodes['not_off'].isnull(), ['not_off']] = 1
         nodes.loc[nodes['off'].isnull(), ['off']] = 1
         labels = nodes['label'].tolist()
@@ -102,7 +98,7 @@ def load_graph(tweet_path, user_path, relationship_path, test_size=0.3, feat_mod
         ngrams = sp.csr_matrix(ngrams)
         ngrams = normalize(ngrams)
         features = torch.tensor(np.array(ngrams.todense())).float()
-    assert(features.size()[0] == len(nodes))
+    assert (features.size()[0] == len(nodes))
     g, source, target = build_graph(nodes, relations, features)
     print(g)
     return g, source, target, nodes
