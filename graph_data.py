@@ -55,8 +55,8 @@ def load_graph(tweet_path, user_path, relationship_path, test_size=0.3, feat_mod
 
     labels_count = pd.DataFrame(data={'user': labels_count.index,
                                       'not_off': labels_count[0],
-                                      'off': labels_count[1]},
-                                index=[i for i in range(1, len(labels_count.index) + 1)])
+                                      'off': labels_count[1]})
+    labels_count.reset_index(drop=True, inplace=True)
     nodes = pd.merge(nodes, labels_count, on='user', how='left')
 
     if feat_model == 'soft':
@@ -81,7 +81,7 @@ def load_graph(tweet_path, user_path, relationship_path, test_size=0.3, feat_mod
     elif feat_model == 'hard':
         nodes.loc[nodes['not_off'].isnull(), ['not_off']] = 1
         nodes.loc[nodes['off'].isnull(), ['off']] = 1
-        labels = nodes['label'].tolist()
+        labels = nodes[['not_off', 'off']].to_numpy()
         features = torch.tensor(labels).float()
 
     elif feat_model == 'bow':
