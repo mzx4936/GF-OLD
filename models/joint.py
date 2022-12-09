@@ -150,7 +150,7 @@ class ROBERTALayer(nn.Module):
         hidden_size = args['hidden_size']
 
         self.emb = RobertaModel.from_pretrained(
-            f'bert-{model_size}-uncased',
+            f'roberta-{model_size}',
             hidden_dropout_prob=args['hidden_dropout'],
             attention_probs_dropout_prob=args['attention_dropout'],
         )
