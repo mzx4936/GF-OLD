@@ -130,7 +130,7 @@ if __name__ == '__main__':
     # criterion = torch.nn.CrossEntropyLoss()
     criterion = FocalLoss()
 
-    if model_name != 'bert':
+    if not (model_name == 'bert' or 'roberta'):
         layer = list(map(id, model.gat.parameters()))
         base_params = filter(lambda p: id(p) not in layer, model.parameters())
         optimizer = torch.optim.Adam([{'params': base_params},
