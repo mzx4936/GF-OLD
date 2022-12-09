@@ -6,9 +6,9 @@ from data import mydata
 from cli import get_args
 from utils import load
 from datasets import OLDDataset, ImbalancedDatasetSampler
-from models.joint import JOINT, JOINTv2, GAT, BERT
+from models.joint import JOINT, JOINTv2, GAT, BERT, ROBERTA
 from models.modules.focal_loss import FocalLoss
-from transformers import BertTokenizer
+from transformers import BertTokenizer, RobertaTokenizer
 from trainer_joint import Trainer
 from graph_data import load_graph
 
@@ -76,6 +76,12 @@ if __name__ == '__main__':
         features = None
         model = BERT(fs=None, model_size=model_size, args=args, num_labels=num_labels)
         tokenizer = BertTokenizer.from_pretrained(f'bert-{model_size}-uncased')
+    elif model_name == 'roberta':
+        g = None
+        features = None
+        model = ROBERTA(fs=None, model_size=model_size, args=args, num_labels=num_labels)
+        # tokenizer = BertTokenizer.from_pretrained(f'bert-{model_size}-uncased')
+        tokenizer = RobertaTokenizer.from_pretrained("roberta-base")
 
     # Move model to correct device
     model = model.to(device=device)
