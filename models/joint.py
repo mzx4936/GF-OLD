@@ -1,9 +1,10 @@
-from models.modules.gnn_layer import GATConv
+import numpy as np
 import torch
 from torch import nn
 from transformers import BertModel
+
 from models.modules.attention import MultiHeadAttention, PositionalEncoding
-import numpy as np
+from models.modules.gnn_layer import GATConv, GATv2Conv
 
 
 class GATLayer(nn.Module):
@@ -44,7 +45,7 @@ class BERTLayer(nn.Module):
         embs = self.emb(inputs.long(), attention_mask=mask)[0]  # (batch_size, sequence_length, hidden_size)
         if features is not None:
             embs = torch.cat([embs, features], dim=1)
-            embs = self.layer_norm(embs + self.position(embs.size(1)-7))
+            embs = self.layer_norm(embs + self.position(embs.size(1) - 7))
         embs, _ = self.slf_attn(embs, embs, embs)
 
         h_n = embs.sum(1)
@@ -61,10 +62,35 @@ class JOINT(nn.Module):
         self.gat = GATLayer(in_feats=fs, out_feats=768, num_heads=8)
         self.bert = BERTLayer(model_size, args=args, num_labels=num_labels)
 
+    def forward(self, inputs, lens, mask, labels, g, features, url, device):
+        gat_emb = self.gat(g, features)
+        ids = [i - 1 for i in url]
+        ids = torch.from_numpy(np.array(ids)).to(device)
+        gat_emb = torch.index_select(gat_emb, 0, ids)
+        h = self.bert(inputs, lens, mask, labels, gat_emb)
+        return h
+
+
+class GATv2Layer(nn.Module):
+    def __init__(self, in_feats, out_feats, num_heads):
+        super(GATv2Layer, self).__init__()
+        self.layer1 = GATv2Conv(in_feats, out_feats, num_heads, residual=True)
+
+    def forward(self, g, h):
+        h = self.layer1(g, h)
+        return h
+
+
+class JOINTv2(nn.Module):
+    def __init__(self, fs, model_size, args, num_labels):
+        super().__init__()
+
+        self.gat = GATv2Layer(in_feats=fs, out_feats=768, num_heads=8)
+        self.bert = BERTLayer(model_size, args=args, num_labels=num_labels)
 
     def forward(self, inputs, lens, mask, labels, g, features, url, device):
         gat_emb = self.gat(g, features)
-        ids = [i-1 for i in url]
+        ids = [i - 1 for i in url]
         ids = torch.from_numpy(np.array(ids)).to(device)
         gat_emb = torch.index_select(gat_emb, 0, ids)
         h = self.bert(inputs, lens, mask, labels, gat_emb)
@@ -89,7 +115,7 @@ class GAT(nn.Module):
 
     def forward(self, inputs, lens, mask, labels, g, features, url, device):
         gat_emb = self.gat(g, features)
-        ids = [i-1 for i in url]
+        ids = [i - 1 for i in url]
         ids = torch.from_numpy(np.array(ids)).to(device)
         gat_emb = torch.index_select(gat_emb, 0, ids)
         gat_emb = self.layer_norm(gat_emb)
