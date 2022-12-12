@@ -6,7 +6,7 @@ from data import mydata
 from cli import get_args
 from utils import load
 from datasets import OLDDataset, ImbalancedDatasetSampler
-from models.joint import JOINT, JOINTv2, GAT, BERT, ROBERTA
+from models.joint import JOINT, JOINTv2, GAT, BERT, ROBERTA, JOINTv2_ROBERTA
 from models.modules.focal_loss import FocalLoss
 from transformers import BertTokenizer, RobertaTokenizer
 from trainer_joint import Trainer
@@ -64,6 +64,13 @@ if __name__ == '__main__':
         features_size = features.size()[1]
         model = JOINTv2(fs=features_size, model_size=model_size, args=args, num_labels=num_labels)
         tokenizer = BertTokenizer.from_pretrained(f'bert-{model_size}-uncased')
+    elif model_name == 'jointv2_roberta':
+        g, _, _, _ = load_graph(tweet_path, user_path, relationship_path, test_size=ts, feat_model=fm, feat_init=fi)
+        g = g.to(device)
+        features = g.ndata['features']
+        features_size = features.size()[1]
+        model = JOINTv2_ROBERTA(fs=features_size, model_size=model_size, args=args, num_labels=num_labels)
+        tokenizer = RobertaTokenizer.from_pretrained("roberta-base")
     elif model_name == 'gat':
         g, _, _, _ = load_graph(tweet_path, user_path, relationship_path, test_size=ts, feat_model=fm, feat_init=fi)
         g = g.to(device)
