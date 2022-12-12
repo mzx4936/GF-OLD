@@ -111,6 +111,21 @@ class JOINTv2_ROBERTA(nn.Module):
         h = self.bert(inputs, lens, mask, labels, gat_emb)
         return h
 
+class JOINT_ROBERTA(nn.Module):
+    def __init__(self, fs, model_size, args, num_labels):
+        super().__init__()
+
+        self.gat = GATLayer(in_feats=fs, out_feats=768, num_heads=8)
+        self.bert = ROBERTALayer(model_size, args=args, num_labels=num_labels)
+
+    def forward(self, inputs, lens, mask, labels, g, features, url, device):
+        gat_emb = self.gat(g, features)
+        ids = [i - 1 for i in url]
+        ids = torch.from_numpy(np.array(ids)).to(device)
+        gat_emb = torch.index_select(gat_emb, 0, ids)
+        h = self.bert(inputs, lens, mask, labels, gat_emb)
+        return h
+
 class GAT(nn.Module):
     def __init__(self, fs, model_size, args, num_labels):
         super().__init__()
