@@ -144,16 +144,24 @@ if __name__ == '__main__':
     # criterion = torch.nn.CrossEntropyLoss()
     criterion = FocalLoss()
 
-    if not (model_name == 'bert' or 'roberta'):
+    if not (model_name == 'bert' or model_name == 'roberta'):
+        print("model_name", model_name)
+        print("model.gat.parameters()", model.gat.parameters())
         layer = list(map(id, model.gat.parameters()))
+        print("layer", layer)
+        print("model.parameters()", model.parameters())
         base_params = filter(lambda p: id(p) not in layer, model.parameters())
+        print("base_params", base_params)
         optimizer = torch.optim.Adam([{'params': base_params},
                                       {'params': model.gat.parameters(), 'lr': lr_gat},
                                       ], lr=lr_other,  weight_decay=wd)
     else:
-
+        print("model_name", model_name)
+        print("model.parameters()", model.parameters())
         optimizer = torch.optim.Adam(model.parameters(), lr=lr_other, weight_decay=wd)
     scheduler = None
+    
+    print("HELLOOOOOOOOOO")
 
     trainer = Trainer(
         model=model,
