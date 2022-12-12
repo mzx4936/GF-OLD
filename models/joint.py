@@ -211,7 +211,9 @@ class ROBERTALayer(nn.Module):
             print("embs", embs.size())
             x = self.position(embs.size(1) - 7)
             print("x", x.size())
-            embs = self.layer_norm(embs + x)
+            y = self.position(embs.size(1))
+            print("y", y.size())
+            embs = self.layer_norm(embs + y)
         embs, _ = self.slf_attn(embs, embs, embs)
 
         h_n = embs.sum(1)
