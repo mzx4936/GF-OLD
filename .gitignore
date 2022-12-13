@@ -1,3 +1,12 @@
 /.venv
 /.idea
 **/__pycache__/
+
+
+*.log
+*.fls
+*.fdb_latexmk
+*.aux
+*.blg
+*.bbl
+*.gz
