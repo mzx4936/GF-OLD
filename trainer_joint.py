@@ -113,8 +113,10 @@ class Trainer():
         save(
             (self.train_losses, self.test_losses,
              self.train_accuracy, self.test_accuracy,
+             self.train_recall, self.test_recall,
+             self.train_precision, self.test_precision,
              self.train_f1, self.test_f1,
-             self.best_train_f1, self.best_test_f1),
+             self.best_train_f1, self.best_test_f1,),
             f'results/{self.model_name}_{self.best_test_f1:.4f}.pt'
         )
 
@@ -255,5 +257,5 @@ class Trainer():
     def save_model(self):
         print('Saving model...')
 
-        filename = f'./saved_models/{self.model_name}_{self.best_test_f1:.4f}_seed{self.seed}.pt'
+        filename = f'./saved_models/{self.model_name}_best_seed{self.seed}.pt'
         save(copy.deepcopy(self.model.state_dict()), filename)
