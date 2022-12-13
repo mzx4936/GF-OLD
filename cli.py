@@ -4,6 +4,7 @@ def get_args():
     parser = argparse.ArgumentParser(description='TRADE Multi-Domain DST')
 
     # Training hyper-parameters
+    parser.add_argument('-ntrials', '--num-trials', help='Number of trials', type=int, required=False, default=1)
     parser.add_argument('-bs', '--batch-size', help='Batch size', type=int, required=True)
     parser.add_argument('-lr_other', '--learning-rate-other', help='Learning rate of others', type=float, required=True, default=5e-5)
     parser.add_argument('-lr_gat', '--learning-rate-gat', help='Learning rate of GAT', type=float, required=True, default=1e-2)  # only gat 1e-5

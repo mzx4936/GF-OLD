@@ -57,23 +57,23 @@ class Trainer():
         # Evaluation results
         self.train_losses = []
         self.test_losses = []
-        # self.train_f1 = []
+        self.train_f1 = []
         self.test_f1 = []
         self.best_train_f1 = 0.0
         self.best_test_f1 = 0.0
 
-        # self.train_accuracy = []
+        self.train_accuracy = []
         self.test_accuracy = []
         self.best_train_accuracy = 0.0
         self.best_test_accuracy = 0.0
 
-        # self.train_recall = []
-        # self.test_recall = []
+        self.train_recall = []
+        self.test_recall = []
         self.best_train_recall = 0.0
         self.best_test_recall = 0.0
 
-        # self.train_precision = []
-        # self.test_precision = []
+        self.train_precision = []
+        self.test_precision = []
         self.best_train_precision = 0.0
         self.best_test_precision = 0.0
 
@@ -109,11 +109,14 @@ class Trainer():
                 print(f'now: {epoch}    last: {self.best_epoch[-1][0]}')
                 break
 
-        # print('Saving results ...')
-        # save(
-        #     (self.train_losses, self.test_losses, self.train_f1, self.test_f1, self.best_train_f1, self.best_test_f1),
-        #     f'./save/results/single_{self.datetimestr}_{self.best_test_f1:.4f}.pt'
-        # )
+        print('Saving results ...')
+        save(
+            (self.train_losses, self.test_losses,
+             self.train_accuracy, self.test_accuracy,
+             self.train_f1, self.test_f1,
+             self.best_train_f1, self.best_test_f1),
+            f'results/{self.model_name}_{self.best_test_f1:.4f}.pt'
+        )
 
     def train_one_epoch(self):
         self.model.train()
@@ -173,7 +176,10 @@ class Trainer():
         print(f'Macro-F1 = {f1:.4f}')
 
         self.train_losses.append(loss)
-        # self.train_f1.append(f1)
+        self.train_accuracy.append(float('%.4f' % accuracy))
+        self.train_recall.append(float('%.4f' % recall))
+        self.train_precision.append(float('%.4f' % precision))
+        self.train_f1.append(float('%.4f' % f1))
         if f1 > self.best_train_f1:
             self.best_train_f1 = f1
 
@@ -241,7 +247,7 @@ class Trainer():
             self.best_test_recall = recall
             self.best_test_precision = precision
             self.best_epoch.append((self.epoch, '%.4f' % f1))
-            # self.save_model()
+            self.save_model()
             self.best_AUC = AUC
             self.fpr = fpr
             self.tpr = tpr
@@ -249,5 +255,5 @@ class Trainer():
     def save_model(self):
         print('Saving model...')
 
-        filename = f'./save/models/{self.model_name}_{self.best_test_f1}_seed{self.seed}.pt'
+        filename = f'./saved_models/{self.model_name}_{self.best_test_f1:.4f}_seed{self.seed}.pt'
         save(copy.deepcopy(self.model.state_dict()), filename)

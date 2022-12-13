@@ -1,4 +1,8 @@
 import os
+import random
+import sys
+import time
+
 import numpy as np
 import torch
 from torch.utils.data import DataLoader
@@ -18,6 +22,7 @@ from graph_data import load_graph
 if __name__ == '__main__':
     # Get command line arguments
     args = get_args()
+    num_trials = args['num_trials']
     args['add_final'] = None
     model_name = args['model']
     model_size = args['model_size']
@@ -135,22 +140,28 @@ if __name__ == '__main__':
         optimizer = torch.optim.Adam(model.parameters(), lr=lr_other, weight_decay=wd)
     scheduler = None
 
-    trainer = Trainer(
-        model=model,
-        epochs=epochs,
-        dataloaders=dataloaders,
-        features=features,
-        criterion=criterion,
-        clip=args['clip'],
-        optimizer=optimizer,
-        scheduler=scheduler,
-        device=device,
-        model_name=model_name,
-        final=args['add_final'],
-        seed=args['seed'],
-        g=g,
-        patience=args['patience']
-    )
+    seed_lst = [args['seed']]
+    if num_trials > 1:
+        random.seed(time.time())
+        seed_lst += random.sample(range(sys.maxsize), num_trials)
 
-    trainer.train()
+    for s in seed_lst:
+        trainer = Trainer(
+            model=model,
+            epochs=epochs,
+            dataloaders=dataloaders,
+            features=features,
+            criterion=criterion,
+            clip=args['clip'],
+            optimizer=optimizer,
+            scheduler=scheduler,
+            device=device,
+            model_name=model_name,
+            final=args['add_final'],
+            seed=s,
+            g=g,
+            patience=args['patience']
+        )
+
+        trainer.train()
 
