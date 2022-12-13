@@ -1,0 +1,120 @@
+%File: formatting-instructions-latex-2023.tex
+%release 2023.0
+\documentclass[letterpaper]{article} % DO NOT CHANGE THIS
+\usepackage{aaai23}  % DO NOT CHANGE THIS
+\usepackage{times}  % DO NOT CHANGE THIS
+\usepackage{helvet}  % DO NOT CHANGE THIS
+\usepackage{courier}  % DO NOT CHANGE THIS
+\usepackage[hyphens]{url}  % DO NOT CHANGE THIS
+\usepackage{graphicx} % DO NOT CHANGE THIS
+\graphicspath{{images/}}
+
+\urlstyle{rm} % DO NOT CHANGE THIS
+\def\UrlFont{\rm}  % DO NOT CHANGE THIS
+\usepackage{natbib}  % DO NOT CHANGE THIS AND DO NOT ADD ANY OPTIONS TO IT
+\usepackage{caption} % DO NOT CHANGE THIS AND DO NOT ADD ANY OPTIONS TO IT
+\frenchspacing  % DO NOT CHANGE THIS
+\setlength{\pdfpagewidth}{8.5in}  % DO NOT CHANGE THIS
+\setlength{\pdfpageheight}{11in}  % DO NOT CHANGE THIS
+%
+% These are recommended to typeset algorithms but not required. See the subsubsection on algorithms. Remove them if you don't have algorithms in your paper.
+\usepackage{algorithm}
+\usepackage{algorithmic}
+
+%
+% These are are recommended to typeset listings but not required. See the subsubsection on listing. Remove this block if you don't have listings in your paper.
+\usepackage{newfloat}
+\usepackage{listings}
+\DeclareCaptionStyle{ruled}{labelfont=normalfont,labelsep=colon,strut=off} % DO NOT CHANGE THIS
+\lstset{%
+	basicstyle={\footnotesize\ttfamily},% footnotesize acceptable for monospace
+	numbers=left,numberstyle=\footnotesize,xleftmargin=2em,% show line numbers, remove this entire line if you don't want the numbers.
+	aboveskip=0pt,belowskip=0pt,%
+	showstringspaces=false,tabsize=2,breaklines=true}
+\floatstyle{ruled}
+\newfloat{listing}{tb}{lst}{}
+\floatname{listing}{Listing}
+%
+% Keep the \pdfinfo as shown here. There's no need
+% for you to add the /Title and /Author tags.
+\pdfinfo{
+/TemplateVersion (2023.1)
+}
+
+\setcounter{secnumdepth}{0} %May be changed to 1 or 2 if section numbers are desired.
+
+\title{Detecting Offensive Language in Tweets with Attention-fused Text and User Embeddings}
+\author {
+    % Authors
+    Viha Gupta,\textsuperscript{\rm 1}
+    Casey Primel\textsuperscript{\rm 1}
+}
+\affiliations {
+    % Affiliations
+    \textsuperscript{\rm 1} Dept. of Computer Science\\
+    vg2237@nyu.edu, ctp219@nyu.edu
+}
+
+
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+    ABSTRACT GOES HERE. Our code is available at \url{https://github.com/guptaviha/GF-OLD}.
+\end{abstract}
+
+Content moderation is a pressing concern for online communities. For over a decade, automated systems have been employed to identify abusive behaviors and offensive language in user-generated content. Early systems relied on hand-crafted rules to extract linguistic features from textual data. Such rule-based systems have largely been replaced by neural network-based systems that can identify more subtle patterns in users' linguistic behaviors. However, research has shown that textual features are not always sufficient for identifying the nature of user-generated content. The rise of social media and the corollary ability to query the social graphs formed by users' activity has opened up a possible data source for constructing the requisite context. The remaining question is how to most effectively provide such context from the available data. Our project focuses on one solution in the context of Twitter: the fusion of text and user embeddings via attention mechanisms.
+
+\section{Introduction}
+
+Recent work exploring the application of deep learning to offensive language detection on Twitter can be divided into two different approaches. The first approach focuses solely on text data (e.g., tweets) and the use of pre-trained language models fine-tuned for this domain-specific task \citep{liu2019-nuli}. The second approach combines text data with information about users and community structure. Recent exemplars of this approach have used graph neural networks to learn the features of the social graph: \citet{Mishra2019} constructs a heterogeneous graph of users and tweets and applies a graph convolutional network to learn its features. \citet{Miao2022} begins by independently extracting text and user embeddings and then fusing them via attention mechanisms. The latter serves as the starting point for our project.
+
+\section{Related work}
+
+LITERATURE REVIEW. FOR SPACE CAN BE COMBINED WITH INTRO SECTION.
+
+\section{Methodology}
+
+DESCRIBE OBJECTIVES.
+
+\subsection{Dataset}
+
+For this project, we will be using the English-language dataset collected, labeleled and made publicly available on GitHub by \citet{Miao2022}.\footnote{\url{https://github.com/mzx4936/GF-OLD-Dataset}} The data was obtained via the Twitter API\footnote{https://developer.twitter.com/en/docs/twitter-api} and contains data from 1,260 users and 12,780 of their tweets posted between Janauary 2018 and March 2021. The dataset also captures the social community in terms of the follower-network between these users with 8,877 such relationships.  
+
+\subsection{Model architecture}
+
+We will be following \citet{Miao2022} in using a graph attention network for learning user embeddings and attention mechanisms for fusing user features with tweet features; however, rather than using text embeddings from BERT, we will use the RoBERTa-based model pre-trained on tweets and fine-tuned for offensive language detection \citep{Barbieri2020}.\footnote{\url{https://huggingface.co/cardiffnlp/twitter-roberta-base-offensive}}
+
+\subsubsection{Graph attention networks}
+
+DESCRIBE GRAPH ATTENTION AND DIFFERENCE BETWEEN STATIC AND DYNAMIC ATTENTION.
+
+\subsubsection{Transformer-based language models}
+
+BERT AND DIFFERENCE BETWEEN BERT AND ROBERTA.
+
+\subsubsection{Attention fusion}
+
+DESCRIBE HOW ATTENTION IS USED TO FUSE EMBEDDINGS.
+
+\subsection{Training setup}
+
+DESCRIBE TRAINING SETUP: SCRIPTS AND HARDWARE.
+
+\subsection{Experiments}
+
+DESCRIBE EXPERIMENTS RUN AND RATIONALE.
+
+\section{Results}
+
+SUMMARIZE RESULTS. SHOW LOSS + ACC PLOTS.
+
+\section{Discussion}
+
+\appendix
+
+\bibliography{project}
+
+\end{document}
