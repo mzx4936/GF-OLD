@@ -117,7 +117,7 @@ class Trainer():
              self.train_precision, self.test_precision,
              self.train_f1, self.test_f1,
              self.best_train_f1, self.best_test_f1,),
-            f'results/{self.model_name}_{self.best_test_f1:.4f}.pt'
+            f'results/{self.model_name}_{self.seed}_{self.best_test_f1:.4f}.pt'
         )
 
     def train_one_epoch(self):
@@ -257,5 +257,5 @@ class Trainer():
     def save_model(self):
         print('Saving model...')
 
-        filename = f'./saved_models/{self.model_name}_best_seed{self.seed}.pt'
+        filename = f'./saved_models/{self.model_name}_{self.seed}_best.pt'
         save(copy.deepcopy(self.model.state_dict()), filename)
