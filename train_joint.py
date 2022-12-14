@@ -210,7 +210,7 @@ if __name__ == '__main__':
         )
 
         metrics = trainer.train()
-        combined_metrics['seed'] = metrics
+        combined_metrics[f'{seed}'] = metrics
 
     print('Saving results...')
     data_dump = json.dumps(combined_metrics)
