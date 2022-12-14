@@ -41,11 +41,9 @@ if __name__ == '__main__':
 
     # Set device
     # os.environ["CUDA_VISIBLE_DEVICES"] = args['cuda']
-    print("torch.cuda.is_available()", torch.cuda.is_available())
     # device = torch.device('cuda:' + cu if torch.cuda.is_available() else 'cpu')
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     # device = torch.device('cpu')
-    print("device is", device)
     
 
     num_labels = 2
@@ -94,7 +92,6 @@ if __name__ == '__main__':
         g = None
         features = None
         model = ROBERTA(fs=None, model_size=model_size, args=args, num_labels=num_labels)
-        # tokenizer = BertTokenizer.from_pretrained(f'bert-{model_size}-uncased')
         tokenizer = RobertaTokenizer.from_pretrained("roberta-base")
 
     # Move model to correct device
@@ -145,23 +142,14 @@ if __name__ == '__main__':
     criterion = FocalLoss()
 
     if not (model_name == 'bert' or model_name == 'roberta'):
-        print("model_name", model_name)
-        print("model.gat.parameters()", model.gat.parameters())
         layer = list(map(id, model.gat.parameters()))
-        print("layer", layer)
-        print("model.parameters()", model.parameters())
         base_params = filter(lambda p: id(p) not in layer, model.parameters())
-        print("base_params", base_params)
         optimizer = torch.optim.Adam([{'params': base_params},
                                       {'params': model.gat.parameters(), 'lr': lr_gat},
                                       ], lr=lr_other,  weight_decay=wd)
     else:
-        print("model_name", model_name)
-        print("model.parameters()", model.parameters())
         optimizer = torch.optim.Adam(model.parameters(), lr=lr_other, weight_decay=wd)
     scheduler = None
-    
-    print("HELLOOOOOOOOOO")
 
     trainer = Trainer(
         model=model,

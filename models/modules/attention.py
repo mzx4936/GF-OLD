@@ -11,43 +11,26 @@ from torch.nn import functional as F
 class PositionalEncoding(nn.Module):
 
     def __init__(self, d_hid, n_position=230):
-        # print("", )
-        # print("d_hid in init", d_hid)
-        # print("n_position in init", n_position)
         super(PositionalEncoding, self).__init__()
 
         # Not a parameter
         self.register_buffer('pos_table', self._get_sinusoid_encoding_table(n_position, d_hid))
 
     def _get_sinusoid_encoding_table(self, n_position, d_hid):
-        # print("d_hid in _get_sinusoid_encoding_table", d_hid)
-        # print("n_position in _get_sinusoid_encoding_table", n_position)
 
         def get_position_angle_vec(position):
-            xx = [position / np.power(10000, 2 * (hid_j // 2) / d_hid) for hid_j in range(d_hid)]
-            # print("return of get_position_angle_vec", xx)
-            return xx
+            return [position / np.power(10000, 2 * (hid_j // 2) / d_hid) for hid_j in range(d_hid)]
 
         sinusoid_table = np.array([get_position_angle_vec(pos_i) for pos_i in range(n_position)])
-        # print("sinusoid_table dim", sinusoid_table.shape)
         sinusoid_table[:, 0::2] = np.sin(sinusoid_table[:, 0::2])  # dim 2i
         sinusoid_table[:, 1::2] = np.cos(sinusoid_table[:, 1::2])  # dim 2i+1
 
-        yy = torch.FloatTensor(sinusoid_table).unsqueeze(0)
-        # print("return of _get_sinusoid_encoding_table", yy)
-        # print("return of _get_sinusoid_encoding_table shape", yy.shape)
-
-        return yy
+        return torch.FloatTensor(sinusoid_table).unsqueeze(0)
 
     def forward(self, l):
-        # print("l in forward", l)
         pos = self.pos_table[:, :l].clone().detach()
-        # print("pos in forward shape", pos.shape)
         end = pos[:, -1, :].unsqueeze(1).repeat(1, 7, 1)
-        # print("end in forward shape", end.shape)
-        zz = torch.cat([pos, end], dim=1)
-        # print("return of forward shape", zz.shape)
-        return zz
+        return torch.cat([pos, end], dim=1)
 
 
 class ScaledDotProductAttention(nn.Module):

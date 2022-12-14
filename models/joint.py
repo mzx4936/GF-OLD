@@ -44,13 +44,8 @@ class BERTLayer(nn.Module):
     def forward(self, inputs, lens, mask, labels, features=None):
         embs = self.emb(inputs.long(), attention_mask=mask)[0]  # (batch_size, sequence_length, hidden_size)
         if features is not None:
-            # print("embs", embs.size())
-            # print("features", features.size())
             embs = torch.cat([embs, features], dim=1)
-            # print("embs", embs.size())
-            x = self.position(embs.size(1) - 7)
-            # print("x", x.size())
-            embs = self.layer_norm(embs + x)
+            embs = self.layer_norm(embs + self.position(embs.size(1) - 7))
         embs, _ = self.slf_attn(embs, embs, embs)
 
         h_n = embs.sum(1)
@@ -205,13 +200,8 @@ class ROBERTALayer(nn.Module):
     def forward(self, inputs, lens, mask, labels, features=None):
         embs = self.emb(inputs.long(), attention_mask=mask)[0]  # (batch_size, sequence_length, hidden_size)
         if features is not None:
-            # print("embs", embs.size())
-            # print("features", features.size())
             embs = torch.cat([embs, features], dim=1)
-            # print("embs", embs.size())
-            x = self.position(embs.size(1) - 7)
-            # print("x", x.size())
-            embs = self.layer_norm(embs + x)
+            embs = self.layer_norm(embs + self.position(embs.size(1) - 7))
         embs, _ = self.slf_attn(embs, embs, embs)
 
         h_n = embs.sum(1)
