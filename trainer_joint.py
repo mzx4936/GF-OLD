@@ -37,6 +37,7 @@ class Trainer():
             seed,
             g,
             patience,
+            log_path
     ):
         self.model = model
         self.epochs = epochs
@@ -53,6 +54,7 @@ class Trainer():
         self.g = g
         self.patience = patience
         self.datetimestr = datetime.datetime.now().strftime('%Y-%b-%d_%H:%M:%S')
+        self.log_path = log_path
 
         # Evaluation results
         self.train_losses = []
@@ -262,5 +264,5 @@ class Trainer():
     def save_model(self):
         print('Saving model...')
 
-        filename = f'./saved_models/{self.model_name}_{self.seed}_best.pt'
+        filename = f'{self.log_path}/saved_models/{self.model_name}_{self.seed}_best.pt'
         save(copy.deepcopy(self.model.state_dict()), filename)

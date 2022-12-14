@@ -42,6 +42,7 @@ if __name__ == '__main__':
     tweet_path = args['tweet_path']
     user_path = args['user_path']
     relationship_path = args['relationship_path']
+    log_path = args['log_path']
     torch.manual_seed(seed)
     np.random.seed(seed)
 
@@ -162,7 +163,8 @@ if __name__ == '__main__':
             final=args['add_final'],
             seed=s,
             g=g,
-            patience=args['patience']
+            patience=args['patience'],
+            log_path=log_path
         )
 
         metrics = trainer.train()
@@ -170,7 +172,7 @@ if __name__ == '__main__':
 
     print('Saving results...')
     data_dump = json.dumps(combined_metrics)
-    filename = f'./results/{model_name}_x{num_trials}_metrics.json'
+    filename = f'{log_path}/results/{model_name}_x{num_trials}_metrics.json'
     f = open(filename, mode='w')
     f.write(data_dump)
     f.close()
