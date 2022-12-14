@@ -6,9 +6,9 @@ from data import mydata
 from cli import get_args
 from utils import load
 from datasets import OLDDataset, ImbalancedDatasetSampler
-from models.joint import JOINT, JOINTv2, GAT, BERT
+from models.joint import JOINT, JOINTv2, GAT, BERT, ROBERTA, JOINTv2_ROBERTA, JOINT_ROBERTA
 from models.modules.focal_loss import FocalLoss
-from transformers import BertTokenizer
+from transformers import BertTokenizer, RobertaTokenizer
 from trainer_joint import Trainer
 from graph_data import load_graph
 
@@ -41,11 +41,9 @@ if __name__ == '__main__':
 
     # Set device
     # os.environ["CUDA_VISIBLE_DEVICES"] = args['cuda']
-    print("torch.cuda.is_available()", torch.cuda.is_available())
     # device = torch.device('cuda:' + cu if torch.cuda.is_available() else 'cpu')
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     # device = torch.device('cpu')
-    print("device is", device)
     
 
     num_labels = 2
@@ -57,6 +55,13 @@ if __name__ == '__main__':
         features_size = features.size()[1]
         model = JOINT(fs=features_size, model_size=model_size, args=args, num_labels=num_labels)
         tokenizer = BertTokenizer.from_pretrained(f'bert-{model_size}-uncased')
+    elif model_name == 'joint_roberta':
+        g, _, _, _ = load_graph(tweet_path, user_path, relationship_path, test_size=ts, feat_model=fm, feat_init=fi)
+        g = g.to(device)
+        features = g.ndata['features']
+        features_size = features.size()[1]
+        model = JOINT_ROBERTA(fs=features_size, model_size=model_size, args=args, num_labels=num_labels)
+        tokenizer = RobertaTokenizer.from_pretrained("roberta-base")
     elif model_name == 'jointv2':
         g, _, _, _ = load_graph(tweet_path, user_path, relationship_path, test_size=ts, feat_model=fm, feat_init=fi)
         g = g.to(device)
@@ -64,6 +69,13 @@ if __name__ == '__main__':
         features_size = features.size()[1]
         model = JOINTv2(fs=features_size, model_size=model_size, args=args, num_labels=num_labels)
         tokenizer = BertTokenizer.from_pretrained(f'bert-{model_size}-uncased')
+    elif model_name == 'jointv2_roberta':
+        g, _, _, _ = load_graph(tweet_path, user_path, relationship_path, test_size=ts, feat_model=fm, feat_init=fi)
+        g = g.to(device)
+        features = g.ndata['features']
+        features_size = features.size()[1]
+        model = JOINTv2_ROBERTA(fs=features_size, model_size=model_size, args=args, num_labels=num_labels)
+        tokenizer = RobertaTokenizer.from_pretrained("roberta-base")
     elif model_name == 'gat':
         g, _, _, _ = load_graph(tweet_path, user_path, relationship_path, test_size=ts, feat_model=fm, feat_init=fi)
         g = g.to(device)
@@ -76,6 +88,11 @@ if __name__ == '__main__':
         features = None
         model = BERT(fs=None, model_size=model_size, args=args, num_labels=num_labels)
         tokenizer = BertTokenizer.from_pretrained(f'bert-{model_size}-uncased')
+    elif model_name == 'roberta':
+        g = None
+        features = None
+        model = ROBERTA(fs=None, model_size=model_size, args=args, num_labels=num_labels)
+        tokenizer = RobertaTokenizer.from_pretrained("roberta-base")
 
     # Move model to correct device
     model = model.to(device=device)
@@ -124,14 +141,13 @@ if __name__ == '__main__':
     # criterion = torch.nn.CrossEntropyLoss()
     criterion = FocalLoss()
 
-    if model_name != 'bert':
+    if not (model_name == 'bert' or model_name == 'roberta'):
         layer = list(map(id, model.gat.parameters()))
         base_params = filter(lambda p: id(p) not in layer, model.parameters())
         optimizer = torch.optim.Adam([{'params': base_params},
                                       {'params': model.gat.parameters(), 'lr': lr_gat},
                                       ], lr=lr_other,  weight_decay=wd)
     else:
-
         optimizer = torch.optim.Adam(model.parameters(), lr=lr_other, weight_decay=wd)
     scheduler = None
 
