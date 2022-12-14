@@ -7,16 +7,16 @@ import time
 import numpy as np
 import torch
 from torch.utils.data import DataLoader
-from data import mydata
+from transformers import BertTokenizer
+
 from cli import get_args
-from utils import load
+from data import mydata
 from datasets import OLDDataset, ImbalancedDatasetSampler
+from graph_data import load_graph
 from models.joint import JOINT, JOINTv2, GAT, BERT
 from models.modules.focal_loss import FocalLoss
-from transformers import BertTokenizer
 from trainer_joint import Trainer
-from graph_data import load_graph
-
+from utils import load
 
 # python train_joint.py -bs=64 -lr_other=5e-5 -lr_gat=1e-2 -ep=20  -dr=0.5 -ad=0.1 -hs=768 --model=joint --clip --cuda=0
 
@@ -53,7 +53,10 @@ if __name__ == '__main__':
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     # device = torch.device('cpu')
     print("device is", device)
-    
+
+    results_path = os.path.join(log_path, 'results')
+    if not os.path.exists(results_path):
+        os.makedirs(results_path)
 
     num_labels = 2
 
@@ -136,7 +139,7 @@ if __name__ == '__main__':
         base_params = filter(lambda p: id(p) not in layer, model.parameters())
         optimizer = torch.optim.Adam([{'params': base_params},
                                       {'params': model.gat.parameters(), 'lr': lr_gat},
-                                      ], lr=lr_other,  weight_decay=wd)
+                                      ], lr=lr_other, weight_decay=wd)
     else:
 
         optimizer = torch.optim.Adam(model.parameters(), lr=lr_other, weight_decay=wd)
@@ -172,9 +175,7 @@ if __name__ == '__main__':
 
     print('Saving results...')
     data_dump = json.dumps(combined_metrics)
-    filename = f'{log_path}/results/{model_name}_x{num_trials}_metrics.json'
-    f = open(filename, mode='w')
+
+    f = open(os.path.join(results_path, f"{model_name}_x{num_trials}_metrics.json"), "w")
     f.write(data_dump)
     f.close()
-
-

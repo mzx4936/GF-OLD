@@ -1,18 +1,16 @@
 # Built-in libraries
-import copy
 import datetime
-from typing import Dict, List
+import os
+import time
+
 # Third-party libraries
 import numpy as np
 import torch
-from torch import nn
-from torch.utils.data import DataLoader
-from sklearn.metrics import f1_score, accuracy_score, recall_score, precision_score, roc_curve, auc, roc_auc_score
-from tqdm import tqdm
 # Local files
-from utils import save
 import torch.nn.functional as F
-import time
+from sklearn.metrics import f1_score, accuracy_score, recall_score, precision_score, roc_curve, auc
+from tqdm import tqdm
+
 
 class Trainer():
     '''
@@ -84,9 +82,6 @@ class Trainer():
         self.epoch = 0
         self.best_epoch = []
         self.time = []
-
-
-
 
     def train(self):
         for epoch in range(self.epochs):
@@ -169,8 +164,8 @@ class Trainer():
                 if self.scheduler is not None:
                     self.scheduler.step()
         end = time.time()
-        self.time.append(end-start)
-        print(f'process time: {sum(self.time)/(self.epoch+1)}')
+        self.time.append(end - start)
+        print(f'process time: {sum(self.time) / (self.epoch + 1)}')
 
         loss /= iters_per_epoch
         f1 = f1_score(labels_all, y_pred_all, average='macro')
@@ -181,7 +176,7 @@ class Trainer():
         print(f'loss = {loss:.4f}')
         print(f'Macro-accuracy = {accuracy:.4f}')
         print(f'Macro-recall = {recall:.4f}')
-        print(f'Macro- precision = { precision:.4f}')
+        print(f'Macro- precision = {precision:.4f}')
         print(f'Macro-F1 = {f1:.4f}')
 
         self.train_losses.append(loss)
@@ -235,9 +230,8 @@ class Trainer():
         fpr, tpr, thresholds = roc_curve(labels_all, y_prob_all)
 
         AUC = auc(fpr, tpr)
-        fpr = [float('%.4f'%i) for i in fpr]
-        tpr = [float('%.4f'%i) for i in tpr]
-
+        fpr = [float('%.4f' % i) for i in fpr]
+        tpr = [float('%.4f' % i) for i in tpr]
 
         print(f'loss = {loss:.4f}')
         print(f'Macro-accuracy = {accuracy:.4f}')
@@ -262,7 +256,11 @@ class Trainer():
             self.tpr = tpr
 
     def save_model(self):
-        print('Saving model...')
 
-        filename = f'{self.log_path}/saved_models/{self.model_name}_{self.seed}_best.pt'
-        save(copy.deepcopy(self.model.state_dict()), filename)
+        print('Saving model...')
+        model_path = os.path.join(self.log_path, 'saved_models')
+        if not os.path.exists(model_path):
+            os.makedirs(model_path)
+        torch.save({
+            'model_state_dict': self.model.state_dict()},
+            os.path.join(model_path, f"{self.model_name}_{self.seed}_best.pt"))
