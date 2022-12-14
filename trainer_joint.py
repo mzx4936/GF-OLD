@@ -109,16 +109,21 @@ class Trainer():
                 print(f'now: {epoch}    last: {self.best_epoch[-1][0]}')
                 break
 
-        print('Saving results ...')
-        save(
-            (self.train_losses, self.test_losses,
-             self.train_accuracy, self.test_accuracy,
-             self.train_recall, self.test_recall,
-             self.train_precision, self.test_precision,
-             self.train_f1, self.test_f1,
-             self.best_train_f1, self.best_test_f1,),
-            f'results/{self.model_name}_{self.seed}_{self.best_test_f1:.4f}.pt'
-        )
+        metrics = {
+            'train_loss': self.train_losses,
+            'test_loss': self.test_losses,
+            'train_acc': self.train_accuracy,
+            'test_acc': self.test_accuracy,
+            'train_recall': self.train_recall,
+            'test_recall': self.test_recall,
+            'train_precision': self.train_precision,
+            'test_precision': self.test_precision,
+            'train_f1': self.train_f1,
+            'test_f1': self.test_f1,
+            'best_train_f1': self.best_train_f1,
+            'best_test_f1': self.best_test_f1,
+        }
+        return metrics
 
     def train_one_epoch(self):
         self.model.train()

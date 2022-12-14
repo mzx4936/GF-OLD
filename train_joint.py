@@ -1,3 +1,4 @@
+import json
 import os
 import random
 import sys
@@ -145,6 +146,7 @@ if __name__ == '__main__':
         random.seed(time.time())
         seed_lst += random.sample(range(sys.maxsize), num_trials)
 
+    combined_metrics = {}
     for s in seed_lst:
         trainer = Trainer(
             model=model,
@@ -163,5 +165,14 @@ if __name__ == '__main__':
             patience=args['patience']
         )
 
-        trainer.train()
+        metrics = trainer.train()
+        combined_metrics['seed'] = metrics
+
+    print('Saving results...')
+    data_dump = json.dumps(combined_metrics)
+    filename = f'./results/{model_name}_x{num_trials}_metrics.json'
+    f = open(filename, mode='w')
+    f.write(data_dump)
+    f.close()
+
 
