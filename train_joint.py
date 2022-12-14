@@ -6,6 +6,7 @@ import time
 
 import numpy as np
 import torch
+import transformers
 from torch.utils.data import DataLoader
 from transformers import BertTokenizer, RobertaTokenizer
 
@@ -13,7 +14,7 @@ from cli import get_args
 from data import mydata
 from datasets import OLDDataset, ImbalancedDatasetSampler
 from graph_data import load_graph
-from models.joint import JOINT, JOINTv2, GAT, BERT, ROBERTA, JOINTv2_ROBERTA, JOINT_ROBERTA
+from models.joint import JOINT, JOINTv2, GAT, BERT, ROBERTA, JOINTv2_ROBERTA, JOINT_ROBERTA, TwitterROBERTA, JOINT_TWIT_ROBERTA, JOINTv2_TWIT_ROBERTA
 from models.modules.focal_loss import FocalLoss
 from trainer_joint import Trainer
 from utils import load
@@ -103,6 +104,28 @@ if __name__ == '__main__':
         features = None
         model = ROBERTA(fs=None, model_size=model_size, args=args, num_labels=num_labels)
         tokenizer = RobertaTokenizer.from_pretrained("roberta-base")
+    elif model_name == 'twitter_roberta':
+        g = None
+        features = None
+        MODEL = f"cardiffnlp/twitter-roberta-base-offensive"
+        tokenizer = transformers.AutoTokenizer.from_pretrained(MODEL)
+        model = TwitterROBERTA(fs=None, model_size=model_size, args=args, num_labels=num_labels)
+    elif model_name == 'joint_twitter_roberta':
+        g, _, _, _ = load_graph(tweet_path, user_path, relationship_path, test_size=ts, feat_model=fm, feat_init=fi)
+        g = g.to(device)
+        features = g.ndata['features']
+        features_size = features.size()[1]
+        MODEL = f"cardiffnlp/twitter-roberta-base-offensive"
+        tokenizer = transformers.AutoTokenizer.from_pretrained(MODEL)
+        model = JOINT_TWIT_ROBERTA(fs=features_size, model_size=model_size, args=args, num_labels=num_labels)
+    elif model_name == 'jointv2_twitter_roberta':
+        g, _, _, _ = load_graph(tweet_path, user_path, relationship_path, test_size=ts, feat_model=fm, feat_init=fi)
+        g = g.to(device)
+        features = g.ndata['features']
+        features_size = features.size()[1]
+        MODEL = f"cardiffnlp/twitter-roberta-base-offensive"
+        tokenizer = transformers.AutoTokenizer.from_pretrained(MODEL)
+        model = JOINTv2_TWIT_ROBERTA(fs=features_size, model_size=model_size, args=args, num_labels=num_labels)
 
     # Move model to correct device
     model = model.to(device=device)
