@@ -10,7 +10,7 @@ from torch.nn import functional as F
 
 class PositionalEncoding(nn.Module):
 
-    def __init__(self, d_hid, n_position=200):
+    def __init__(self, d_hid, n_position=230):
         super(PositionalEncoding, self).__init__()
 
         # Not a parameter
