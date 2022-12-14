@@ -30,7 +30,7 @@ class BERTLayer(nn.Module):
         )
         self.dropout = nn.Dropout(p=args['dropout'])
         self.linear = nn.Linear(in_features=hidden_size, out_features=num_labels)
-        self.position = PositionalEncoding(hidden_size)
+        self.position = PositionalEncoding(hidden_size, n_position=112)  # TODO: Should be set dynamically
         self.slf_attn = MultiHeadAttention(8, hidden_size, 64, 64, dropout=0.1)
         self.layer_norm = nn.LayerNorm(hidden_size, eps=1e-6)
         self.relu = nn.ReLU()
@@ -232,7 +232,7 @@ class ROBERTALayer(nn.Module):
         )
         self.dropout = nn.Dropout(p=args['dropout'])
         self.linear = nn.Linear(in_features=hidden_size, out_features=num_labels)
-        self.position = PositionalEncoding(hidden_size)
+        self.position = PositionalEncoding(hidden_size, n_position=220)  # TODO: Should be set dynamically
         self.slf_attn = MultiHeadAttention(8, hidden_size, 64, 64, dropout=0.1)
         self.layer_norm = nn.LayerNorm(hidden_size, eps=1e-6)
         self.relu = nn.ReLU()
@@ -268,7 +268,7 @@ class TwitterROBERTALayer(nn.Module):
         self.emb = model
         self.dropout = nn.Dropout(p=args['dropout'])
         self.linear = nn.Linear(in_features=hidden_size, out_features=num_labels)
-        self.position = PositionalEncoding(hidden_size)
+        self.position = PositionalEncoding(hidden_size, n_position=230)
         self.slf_attn = MultiHeadAttention(8, hidden_size, 64, 64, dropout=0.1)
         self.layer_norm = nn.LayerNorm(hidden_size, eps=1e-6)
         self.relu = nn.ReLU()

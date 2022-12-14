@@ -123,7 +123,7 @@ def mydata(path, tokenizer, data_type='train', truncate=512, test_size=0.3):
     token_ids = [tokenizer.encode(text=tweets[i], add_special_tokens=True, max_length=truncate, truncation=True)
                  for i in range(nums)]
     mask = np.array(get_mask(token_ids))
-    lens = get_lens(token_ids)
+    lens = get_lens(token_ids)  # BERT -> max(lens) = 110; RoBERTa -> 218
     token_ids = np.array(pad_sents(token_ids, tokenizer.pad_token_id))
 
     purl_train, purl_test, token_ids_train, token_ids_test, lens_train, lens_test, mask_train, mask_test, labels_train,\
