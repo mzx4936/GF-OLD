@@ -14,7 +14,8 @@ from cli import get_args
 from data import mydata
 from datasets import OLDDataset, ImbalancedDatasetSampler
 from graph_data import load_graph
-from models.joint import JOINT, JOINTv2, GAT, BERT, ROBERTA, JOINTv2_ROBERTA, JOINT_ROBERTA, TwitterROBERTA, JOINT_TWIT_ROBERTA, JOINTv2_TWIT_ROBERTA
+from models.joint import JOINT, JOINTv2, GAT, BERT, ROBERTA, JOINTv2_ROBERTA, JOINT_ROBERTA, TwitterROBERTA, \
+    JOINT_TWIT_ROBERTA, JOINTv2_TWIT_ROBERTA, GATV2
 from models.modules.focal_loss import FocalLoss
 from trainer_joint import Trainer
 from utils import load
@@ -99,7 +100,7 @@ if __name__ == '__main__':
         g = g.to(device)
         features = g.ndata['features']
         features_size = features.size()[1]
-        model = GAT(fs=features_size, model_size=model_size, args=args, num_labels=num_labels)
+        model = GATV2(fs=features_size, model_size=model_size, args=args, num_labels=num_labels)
         tokenizer = BertTokenizer.from_pretrained(f'bert-{model_size}-uncased')
     elif model_name == 'bert':
         g = None
