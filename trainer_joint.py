@@ -32,7 +32,7 @@ class Trainer():
             device,
             model_name,
             final,
-            seed,
+            trial_id,
             g,
             patience,
             log_path
@@ -48,7 +48,7 @@ class Trainer():
         self.device = device
         self.model_name = model_name
         self.final = final
-        self.seed = seed
+        self.trial_id = trial_id
         self.g = g
         self.patience = patience
         self.datetimestr = datetime.datetime.now().strftime('%Y-%b-%d_%H:%M:%S')
@@ -263,4 +263,4 @@ class Trainer():
             os.makedirs(model_path)
         torch.save({
             'model_state_dict': self.model.state_dict()},
-            os.path.join(model_path, f"{self.model_name}_{self.seed}_best.pt"))
+            os.path.join(model_path, f"{self.model_name}_{self.trial_id}_best.pt"))

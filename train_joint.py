@@ -94,6 +94,13 @@ if __name__ == '__main__':
         features_size = features.size()[1]
         model = GAT(fs=features_size, model_size=model_size, args=args, num_labels=num_labels)
         tokenizer = BertTokenizer.from_pretrained(f'bert-{model_size}-uncased')
+    elif model_name == 'gatv2':
+        g, _, _, _ = load_graph(tweet_path, user_path, relationship_path, test_size=ts, feat_model=fm, feat_init=fi)
+        g = g.to(device)
+        features = g.ndata['features']
+        features_size = features.size()[1]
+        model = GAT(fs=features_size, model_size=model_size, args=args, num_labels=num_labels)
+        tokenizer = BertTokenizer.from_pretrained(f'bert-{model_size}-uncased')
     elif model_name == 'bert':
         g = None
         features = None
@@ -184,13 +191,8 @@ if __name__ == '__main__':
         optimizer = torch.optim.Adam(model.parameters(), lr=lr_other, weight_decay=wd)
     scheduler = None
 
-    seed_lst = [args['seed']]
-    if num_trials > 1:
-        random.seed(time.time())
-        seed_lst += random.sample(range(sys.maxsize), num_trials)
-
     combined_metrics = {}
-    for s in seed_lst:
+    for trial in range(num_trials):
         trainer = Trainer(
             model=model,
             epochs=epochs,
@@ -203,14 +205,14 @@ if __name__ == '__main__':
             device=device,
             model_name=model_name,
             final=args['add_final'],
-            seed=s,
+            trial_id=trial,
             g=g,
             patience=args['patience'],
             log_path=log_path
         )
 
         metrics = trainer.train()
-        combined_metrics[f'{s}'] = metrics
+        combined_metrics[f'{trial}'] = metrics
 
     print('Saving results...')
     data_dump = json.dumps(combined_metrics)

@@ -190,6 +190,33 @@ class GAT(nn.Module):
         return logits
 
 
+class GATV2(nn.Module):
+    def __init__(self, fs, model_size, args, num_labels):
+        super().__init__()
+        hidden_size = args['hidden_size']
+        self.gat = GATv2Layer(in_feats=fs, out_feats=hidden_size, num_heads=8)
+        self.layer_norm = nn.LayerNorm(hidden_size, eps=1e-6)
+        self.slf_attn = MultiHeadAttention(8, hidden_size, 64, 64, dropout=0.1)
+        self.linear = nn.Linear(in_features=hidden_size, out_features=2)
+        self.reset_parameters()
+
+    def reset_parameters(self):
+        gain = nn.init.calculate_gain('sigmoid')
+        for n, p in self.named_parameters():
+            if p.dim() > 1 and 'gat' not in n:
+                nn.init.xavier_normal_(p, gain=gain)
+
+    def forward(self, inputs, lens, mask, labels, g, features, url, device):
+        gat_emb = self.gat(g, features)
+        ids = [i - 1 for i in url]
+        ids = torch.from_numpy(np.array(ids)).to(device)
+        gat_emb = torch.index_select(gat_emb, 0, ids)
+        gat_emb = self.layer_norm(gat_emb)
+        gat_emb, _ = self.slf_attn(gat_emb, gat_emb, gat_emb)
+        gat_emb = gat_emb.sum(1)
+        logits = self.linear(gat_emb)
+        return logits
+
 class BERT(nn.Module):
     def __init__(self, fs, model_size, args, num_labels):
         super().__init__()
