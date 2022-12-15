@@ -1,18 +1,16 @@
 # Built-in libraries
-import copy
 import datetime
-from typing import Dict, List
+import os
+import time
+
 # Third-party libraries
 import numpy as np
 import torch
-from torch import nn
-from torch.utils.data import DataLoader
-from sklearn.metrics import f1_score, accuracy_score, recall_score, precision_score, roc_curve, auc, roc_auc_score
-from tqdm import tqdm
 # Local files
-from utils import save
 import torch.nn.functional as F
-import time
+from sklearn.metrics import f1_score, accuracy_score, recall_score, precision_score, roc_curve, auc
+from tqdm import tqdm
+
 
 class Trainer():
     '''
@@ -34,9 +32,10 @@ class Trainer():
             device,
             model_name,
             final,
-            seed,
+            trial_id,
             g,
             patience,
+            log_path
     ):
         self.model = model
         self.epochs = epochs
@@ -49,31 +48,32 @@ class Trainer():
         self.device = device
         self.model_name = model_name
         self.final = final
-        self.seed = seed
+        self.trial_id = trial_id
         self.g = g
         self.patience = patience
         self.datetimestr = datetime.datetime.now().strftime('%Y-%b-%d_%H:%M:%S')
+        self.log_path = log_path
 
         # Evaluation results
         self.train_losses = []
         self.test_losses = []
-        # self.train_f1 = []
+        self.train_f1 = []
         self.test_f1 = []
         self.best_train_f1 = 0.0
         self.best_test_f1 = 0.0
 
-        # self.train_accuracy = []
+        self.train_accuracy = []
         self.test_accuracy = []
         self.best_train_accuracy = 0.0
         self.best_test_accuracy = 0.0
 
-        # self.train_recall = []
-        # self.test_recall = []
+        self.train_recall = []
+        self.test_recall = []
         self.best_train_recall = 0.0
         self.best_test_recall = 0.0
 
-        # self.train_precision = []
-        # self.test_precision = []
+        self.train_precision = []
+        self.test_precision = []
         self.best_train_precision = 0.0
         self.best_test_precision = 0.0
 
@@ -82,9 +82,6 @@ class Trainer():
         self.epoch = 0
         self.best_epoch = []
         self.time = []
-
-
-
 
     def train(self):
         for epoch in range(self.epochs):
@@ -109,11 +106,21 @@ class Trainer():
                 print(f'now: {epoch}    last: {self.best_epoch[-1][0]}')
                 break
 
-        # print('Saving results ...')
-        # save(
-        #     (self.train_losses, self.test_losses, self.train_f1, self.test_f1, self.best_train_f1, self.best_test_f1),
-        #     f'./save/results/single_{self.datetimestr}_{self.best_test_f1:.4f}.pt'
-        # )
+        metrics = {
+            'train_loss': self.train_losses,
+            'test_loss': self.test_losses,
+            'train_acc': self.train_accuracy,
+            'test_acc': self.test_accuracy,
+            'train_recall': self.train_recall,
+            'test_recall': self.test_recall,
+            'train_precision': self.train_precision,
+            'test_precision': self.test_precision,
+            'train_f1': self.train_f1,
+            'test_f1': self.test_f1,
+            'best_train_f1': self.best_train_f1,
+            'best_test_f1': self.best_test_f1,
+        }
+        return metrics
 
     def train_one_epoch(self):
         self.model.train()
@@ -157,8 +164,8 @@ class Trainer():
                 if self.scheduler is not None:
                     self.scheduler.step()
         end = time.time()
-        self.time.append(end-start)
-        print(f'process time: {sum(self.time)/(self.epoch+1)}')
+        self.time.append(end - start)
+        print(f'process time: {sum(self.time) / (self.epoch + 1)}')
 
         loss /= iters_per_epoch
         f1 = f1_score(labels_all, y_pred_all, average='macro')
@@ -169,11 +176,14 @@ class Trainer():
         print(f'loss = {loss:.4f}')
         print(f'Macro-accuracy = {accuracy:.4f}')
         print(f'Macro-recall = {recall:.4f}')
-        print(f'Macro- precision = { precision:.4f}')
+        print(f'Macro- precision = {precision:.4f}')
         print(f'Macro-F1 = {f1:.4f}')
 
         self.train_losses.append(loss)
-        # self.train_f1.append(f1)
+        self.train_accuracy.append(float('%.4f' % accuracy))
+        self.train_recall.append(float('%.4f' % recall))
+        self.train_precision.append(float('%.4f' % precision))
+        self.train_f1.append(float('%.4f' % f1))
         if f1 > self.best_train_f1:
             self.best_train_f1 = f1
 
@@ -220,9 +230,8 @@ class Trainer():
         fpr, tpr, thresholds = roc_curve(labels_all, y_prob_all)
 
         AUC = auc(fpr, tpr)
-        fpr = [float('%.4f'%i) for i in fpr]
-        tpr = [float('%.4f'%i) for i in tpr]
-
+        fpr = [float('%.4f' % i) for i in fpr]
+        tpr = [float('%.4f' % i) for i in tpr]
 
         print(f'loss = {loss:.4f}')
         print(f'Macro-accuracy = {accuracy:.4f}')
@@ -241,13 +250,17 @@ class Trainer():
             self.best_test_recall = recall
             self.best_test_precision = precision
             self.best_epoch.append((self.epoch, '%.4f' % f1))
-            # self.save_model()
+            self.save_model()
             self.best_AUC = AUC
             self.fpr = fpr
             self.tpr = tpr
 
     def save_model(self):
-        print('Saving model...')
 
-        filename = f'./save/models/{self.model_name}_{self.best_test_f1}_seed{self.seed}.pt'
-        save(copy.deepcopy(self.model.state_dict()), filename)
+        print('Saving model...')
+        model_path = os.path.join(self.log_path, 'saved_models')
+        if not os.path.exists(model_path):
+            os.makedirs(model_path)
+        torch.save({
+            'model_state_dict': self.model.state_dict()},
+            os.path.join(model_path, f"{self.model_name}_{self.trial_id}_best.pt"))
