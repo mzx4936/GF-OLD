@@ -211,7 +211,6 @@ if __name__ == '__main__':
 
         metrics = trainer.train()
         combined_metrics[f'{s}'] = metrics
-        print(combined_metrics)
 
     print('Saving results...')
     data_dump = json.dumps(combined_metrics)
