@@ -215,6 +215,10 @@ if __name__ == '__main__':
         metrics = trainer.train()
         combined_metrics[f'{trial}'] = metrics
 
+        for layer in model.children():
+            if hasattr(layer, 'reset_parameters'):
+                layer.reset_parameters()
+
     print('Saving results...')
     data_dump = json.dumps(combined_metrics)
 
