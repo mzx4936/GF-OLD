@@ -1,8 +1,6 @@
 import json
 import os
-import random
-import sys
-import time
+from copy import deepcopy
 
 import numpy as np
 import torch
@@ -135,12 +133,6 @@ if __name__ == '__main__':
         tokenizer = transformers.AutoTokenizer.from_pretrained(MODEL)
         model = JOINTv2_TWIT_ROBERTA(fs=features_size, model_size=model_size, args=args, num_labels=num_labels)
 
-    # Move model to correct device
-    model = model.to(device=device)
-
-    if args['ckpt'] != '':
-        model.load_state_dict(load(args['ckpt']))
-
     _Dataset = OLDDataset
 
     purl_train, token_ids_train, lens_train, mask_train, labels_train = mydata(path=tweet_path,
@@ -182,20 +174,27 @@ if __name__ == '__main__':
     # criterion = torch.nn.CrossEntropyLoss()
     criterion = FocalLoss()
 
-    if not (model_name == 'bert' or model_name == 'roberta' or model_name == 'twitter_roberta'):
-        layer = list(map(id, model.gat.parameters()))
-        base_params = filter(lambda p: id(p) not in layer, model.parameters())
-        optimizer = torch.optim.Adam([{'params': base_params},
-                                      {'params': model.gat.parameters(), 'lr': lr_gat},
-                                      ], lr=lr_other, weight_decay=wd)
-    else:
-        optimizer = torch.optim.Adam(model.parameters(), lr=lr_other, weight_decay=wd)
-    scheduler = None
-
     combined_metrics = {}
     for trial in range(num_trials):
+        # Move model to correct device
+        _model = deepcopy(model)
+        _model = _model.to(device=device)
+
+        if args['ckpt'] != '':
+            _model.load_state_dict(load(args['ckpt']))
+
+        if not (model_name == 'bert' or model_name == 'roberta' or model_name == 'twitter_roberta'):
+            layer = list(map(id, _model.gat.parameters()))
+            base_params = filter(lambda p: id(p) not in layer, _model.parameters())
+            optimizer = torch.optim.Adam([{'params': base_params},
+                                          {'params': _model.gat.parameters(), 'lr': lr_gat},
+                                          ], lr=lr_other, weight_decay=wd)
+        else:
+            optimizer = torch.optim.Adam(_model.parameters(), lr=lr_other, weight_decay=wd)
+        scheduler = None
+
         trainer = Trainer(
-            model=model,
+            model=_model,
             epochs=epochs,
             dataloaders=dataloaders,
             features=features,
@@ -214,6 +213,10 @@ if __name__ == '__main__':
 
         metrics = trainer.train()
         combined_metrics[f'{trial}'] = metrics
+
+        # for layer in model.children():
+        #     if hasattr(layer, 'reset_parameters'):
+        #         layer.reset_parameters()
 
     print('Saving results...')
     data_dump = json.dumps(combined_metrics)
