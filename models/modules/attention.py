@@ -9,6 +9,7 @@ from torch.nn import functional as F
 
 
 class PositionalEncoding(nn.Module):
+    ''' Positional Encoding '''
 
     def __init__(self, d_hid, n_position):
         super(PositionalEncoding, self).__init__()
@@ -17,6 +18,9 @@ class PositionalEncoding(nn.Module):
         self.register_buffer('pos_table', self._get_sinusoid_encoding_table(n_position, d_hid))
 
     def _get_sinusoid_encoding_table(self, n_position, d_hid):
+        # To calculate positional encoding matrix
+        # PE(Pos,2i) = sin(pos/(2i/(N^d*model)))
+        # PE(Pos,2i+1) = cos(pos/(2i/(N^d*model)))
 
         def get_position_angle_vec(position):
             return [position / np.power(10000, 2 * (hid_j // 2) / d_hid) for hid_j in range(d_hid)]

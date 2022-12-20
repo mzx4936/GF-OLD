@@ -47,17 +47,17 @@ if __name__ == '__main__':
     np.random.seed(seed)
 
     # Set device
-    # os.environ["CUDA_VISIBLE_DEVICES"] = args['cuda']
-    # device = torch.device('cuda:' + cu if torch.cuda.is_available() else 'cpu')
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    # device = torch.device('cpu')
 
+    # Create directory for saving results
     results_path = os.path.join(log_path, 'results')
     if not os.path.exists(results_path):
         os.makedirs(results_path)
 
     num_labels = 2
 
+    # model_names = [joint, joint_roberta, jointv2, jointv2_roberta, gat, gatv2, bert, 
+    # roberta, twitter_roberta, joint_twitter_roberta, jointv2_twitter_roberta]
     if model_name == 'joint':
         g, _, _, _ = load_graph(tweet_path, user_path, relationship_path, test_size=ts, feat_model=fm, feat_init=fi)
         g = g.to(device)
@@ -133,6 +133,7 @@ if __name__ == '__main__':
         tokenizer = transformers.AutoTokenizer.from_pretrained(MODEL)
         model = JOINTv2_TWIT_ROBERTA(fs=features_size, model_size=model_size, args=args, num_labels=num_labels)
 
+    # Split train and test datasets
     _Dataset = OLDDataset
 
     purl_train, token_ids_train, lens_train, mask_train, labels_train = mydata(path=tweet_path,
@@ -161,6 +162,7 @@ if __name__ == '__main__':
         )
     }
 
+    # Train and test dataloaders
     sampler = ImbalancedDatasetSampler(datasets['train'])
     dataloaders = {
         'train': DataLoader(
@@ -171,7 +173,7 @@ if __name__ == '__main__':
         'test': DataLoader(dataset=datasets['test'], batch_size=bs)
     }
 
-    # criterion = torch.nn.CrossEntropyLoss()
+    # Loss fuction: focal loss
     criterion = FocalLoss()
 
     combined_metrics = {}
@@ -183,6 +185,7 @@ if __name__ == '__main__':
         if args['ckpt'] != '':
             _model.load_state_dict(load(args['ckpt']))
 
+        # For models with gat, pass non gat and gat params to the optimizer seperately ?? 
         if not (model_name == 'bert' or model_name == 'roberta' or model_name == 'twitter_roberta'):
             layer = list(map(id, _model.gat.parameters()))
             base_params = filter(lambda p: id(p) not in layer, _model.parameters())
@@ -193,6 +196,7 @@ if __name__ == '__main__':
             optimizer = torch.optim.Adam(_model.parameters(), lr=lr_other, weight_decay=wd)
         scheduler = None
 
+        # Train the model
         trainer = Trainer(
             model=_model,
             epochs=epochs,
@@ -218,6 +222,7 @@ if __name__ == '__main__':
         #     if hasattr(layer, 'reset_parameters'):
         #         layer.reset_parameters()
 
+    # Write results to json file
     print('Saving results...')
     data_dump = json.dumps(combined_metrics)
 
